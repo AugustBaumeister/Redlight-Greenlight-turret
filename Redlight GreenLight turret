@@ -1,0 +1,85 @@
+ // this hack needs a 220Ω to 330Ω resistor for each LED.
+
+#include <Servo.h>
+
+// Pin definitions
+const int redLEDPin = 2;
+const int greenLEDPin = 3;
+const int motionSensorPin = 4;
+const int rollServoPin = 12;
+
+// Game timing
+const int startupLightDuration = 5000; // 5 seconds
+const int countdownBlinkDuration = 3000; // 3 seconds
+const int blinkInterval = 1000; // 1 second
+const int blinkOnTime = 750; // 0.75 seconds
+
+// Motion detection
+const int fireDuration = 6000; // 6 seconds
+const int rollSpeed = 120; // Medium speed
+
+Servo rollServo;
+
+void setup() {
+  Serial.begin(9600);
+
+  // Setup pins
+  pinMode(redLEDPin, OUTPUT);
+  pinMode(greenLEDPin, OUTPUT);
+  pinMode(motionSensorPin, INPUT);
+
+  rollServo.attach(rollServoPin);
+  rollServo.write(90); // Stop position
+
+  // Startup sequence
+  digitalWrite(redLEDPin, HIGH);
+  digitalWrite(greenLEDPin, HIGH);
+  delay(startupLightDuration);
+
+  // Countdown blinking
+  for (int i = 0; i < countdownBlinkDuration / blinkInterval; i++) {
+    digitalWrite(redLEDPin, HIGH);
+    digitalWrite(greenLEDPin, HIGH);
+    delay(blinkOnTime);
+    digitalWrite(redLEDPin, LOW);
+    digitalWrite(greenLEDPin, LOW);
+    delay(blinkInterval - blinkOnTime);
+  }
+
+  Serial.println("Game Start!");
+}
+
+void loop() {
+  // Randomly decide green or red light duration
+  int greenDuration = random(3000, 7000); // 3–7 seconds
+  int redDuration = random(3000, 7000);   // 3–7 seconds
+
+  // GREEN LIGHT: Safe to move
+  digitalWrite(greenLEDPin, HIGH);
+  digitalWrite(redLEDPin, LOW);
+  Serial.println("GREEN LIGHT - Player can move");
+  delay(greenDuration);
+
+  // RED LIGHT: Motion detection active
+  digitalWrite(greenLEDPin, LOW);
+  digitalWrite(redLEDPin, HIGH);
+  Serial.println("RED LIGHT - Motion detection active");
+
+  unsigned long startTime = millis();
+  while (millis() - startTime < redDuration) {
+    if (digitalRead(motionSensorPin) == HIGH) {
+      Serial.println("MOTION DETECTED - FIRING!");
+      fireRollServo();
+      break; // Stop checking after firing
+    }
+  }
+
+  digitalWrite(redLEDPin, LOW);
+  delay(500); // Small buffer before next cycle
+}
+
+void fireRollServo() {
+  rollServo.write(rollSpeed); // Start spinning
+  delay(fireDuration);
+  rollServo.write(90); // Stop
+}
