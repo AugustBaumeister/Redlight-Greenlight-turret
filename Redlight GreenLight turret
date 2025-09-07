@@ -1,4 +1,4 @@
- // this hack needs a 220Ω to 330Ω resistor for each LED.
+
 
 #include <Servo.h>
 
