@@ -1,85 +1,74 @@
+#pragma region Libraries and stuff
 #include <Servo.h>
 
-const int redLEDPin = 2;
-const int greenLEDPin = 3;
+const int greenLEDPin = 10;
+const int redLEDPin = 9;
 const int motionSensorPin = 4;
-const int rollServoPin = 9; 
+const int rollServoPin = 5;
 
-const int startupLightDuration = 5000; 
-const int countdownBlinkDuration = 3000; 
-const int blinkInterval = 1000; 
-const int blinkOnTime = 750; 
-
-const int fireDuration = 3000; 
-const int rollSpeed = 0; 
+const int rollSpeed = 0;          
+const int stopPosition = 90;      
+const int rollDuration = 5000;    
+const int motionCheckDuration = 10000; 
 
 Servo rollServo;
+#pragma endregion Libraries and stuff
 
 void setup() {
   Serial.begin(9600);
 
-  pinMode(redLEDPin, OUTPUT);
   pinMode(greenLEDPin, OUTPUT);
+  pinMode(redLEDPin, OUTPUT);
   pinMode(motionSensorPin, INPUT);
-rollServo.attach(rollServoPin);
-  delay(100); 
-  rollServo.write(90); 
 
-  
-  digitalWrite(redLEDPin, HIGH);
-  digitalWrite(greenLEDPin, HIGH);
-  delay(startupLightDuration);
-
-  
-  for (int i = 0; i < countdownBlinkDuration / blinkInterval; i++) {
-    digitalWrite(redLEDPin, HIGH);
-    digitalWrite(greenLEDPin, HIGH);
-    delay(blinkOnTime);
-    digitalWrite(redLEDPin, LOW);
-    digitalWrite(greenLEDPin, LOW);
-    delay(blinkInterval - blinkOnTime);
-  }
-
-  Serial.println("Game Start!");
-}
-
-void loop() {
-  int greenDuration = random(3000, 7000); 
-  int redDuration = random(3000, 7000);   
+  rollServo.attach(rollServoPin);
+  rollServo.write(stopPosition); 
 
   
   digitalWrite(greenLEDPin, HIGH);
   digitalWrite(redLEDPin, LOW);
-  Serial.println("GREEN LIGHT - Player can move");
-  delay(greenDuration);
+Serial.println("Game Start: GREEN LIGHT - You can move");
+}
+
+void loop() {
+  
+  delay(5000); 
 
   
   digitalWrite(greenLEDPin, LOW);
   digitalWrite(redLEDPin, HIGH);
   Serial.println("RED LIGHT - Motion detection active");
 
-  
   unsigned long startTime = millis();
-  while (millis() - startTime < redDuration) {
+  bool motionDetected = false;
+
+  
+  while (millis() - startTime < motionCheckDuration) {
     if (digitalRead(motionSensorPin) == HIGH) {
-      Serial.println("MOTION DETECTED - FIRING!");
+      Serial.println("MOTION DETECTED DURING RED LIGHT - Firing roll servo!");
       fireRollServo();
+motionDetected = true;
       break;
     }
-    delay(10); 
+    delay(50); 
   }
 
-  
-  digitalWrite(redLEDPin, LOW);
-  delay(500); 
+  if (!motionDetected) {
+    Serial.println("No motion detected - back to GREEN LIGHT");
+    digitalWrite(redLEDPin, LOW);
+    digitalWrite(greenLEDPin, HIGH);
+  } else {
+    Serial.println("Game Over - Press RESET to restart");
+    while (true); 
+  }
 }
-
-
+#pragma region Roll servo firing 
 void fireRollServo() {
-  Serial.println("Inside fireRollServo()");
   rollServo.write(rollSpeed); 
-  delay(fireDuration);
-  rollServo.write(90); 
-  Serial.println("Servo should have moved");
+  delay(rollDuration);
+  rollServo.write(stopPosition); 
 }
+#pragma endregion Roll servo firing
+
+//END OF CODE
 
