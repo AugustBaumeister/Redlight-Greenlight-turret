@@ -1,35 +1,29 @@
-
-
 #include <Servo.h>
-
 
 const int redLEDPin = 2;
 const int greenLEDPin = 3;
 const int motionSensorPin = 4;
-const int rollServoPin = 12;
+const int rollServoPin = 9; 
 
+const int startupLightDuration = 5000; 
+const int countdownBlinkDuration = 3000; 
+const int blinkInterval = 1000; 
+const int blinkOnTime = 750; 
 
-const int startupLightDuration = 5000; // 5 seconds
-const int countdownBlinkDuration = 3000; // 3 seconds
-const int blinkInterval = 1000; // 1 second
-const int blinkOnTime = 750; // 0.75 seconds
-
-
-const int fireDuration = 6000; // 6 seconds
-const int rollSpeed = 120; // Medium speed
+const int fireDuration = 3000; 
+const int rollSpeed = 0; 
 
 Servo rollServo;
 
 void setup() {
   Serial.begin(9600);
 
-  
   pinMode(redLEDPin, OUTPUT);
   pinMode(greenLEDPin, OUTPUT);
   pinMode(motionSensorPin, INPUT);
-
-  rollServo.attach(rollServoPin);
-  rollServo.write(90); // Stop position
+rollServo.attach(rollServoPin);
+  delay(100); 
+  rollServo.write(90); 
 
   
   digitalWrite(redLEDPin, HIGH);
@@ -50,9 +44,8 @@ void setup() {
 }
 
 void loop() {
-  
-  int greenDuration = random(3000, 7000); // 3–7 seconds
-  int redDuration = random(3000, 7000);   // 3–7 seconds
+  int greenDuration = random(3000, 7000); 
+  int redDuration = random(3000, 7000);   
 
   
   digitalWrite(greenLEDPin, HIGH);
@@ -65,21 +58,28 @@ void loop() {
   digitalWrite(redLEDPin, HIGH);
   Serial.println("RED LIGHT - Motion detection active");
 
+  
   unsigned long startTime = millis();
   while (millis() - startTime < redDuration) {
     if (digitalRead(motionSensorPin) == HIGH) {
       Serial.println("MOTION DETECTED - FIRING!");
       fireRollServo();
-      break; // Stop checking after firing
+      break;
     }
+    delay(10); 
   }
 
+  
   digitalWrite(redLEDPin, LOW);
-  delay(500); // Small buffer before next cycle
+  delay(500); 
 }
 
+
 void fireRollServo() {
-  rollServo.write(rollSpeed); // Start spinning
+  Serial.println("Inside fireRollServo()");
+  rollServo.write(rollSpeed); 
   delay(fireDuration);
-  rollServo.write(90); // Stop
+  rollServo.write(90); 
+  Serial.println("Servo should have moved");
 }
+
